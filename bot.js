@@ -60,7 +60,7 @@ bot.on('message', function (user, userID, channelID, message, evt) {
             break;
             case 'img':
 				let subreddit = args[1];
-				if !(subreddit){
+				if (!subreddit){
 					bot.sendMessage({
 					to: channelID,
 					message: "Must specify a subreddit:\n!img SUBREDDIT_NAME -> !img gifs"
