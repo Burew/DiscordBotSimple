@@ -49,6 +49,8 @@ bot.on('message', function (user, userID, channelID, message, evt) {
         var args = message.substring(1).split(' ');
         var cmd = args[0];
 		
+		// TODO: add safety for nsfw images/gifs -> specific syntax just for it
+		
         //args = args.splice(1, 1);
         switch(cmd) {
             // !ping
