@@ -1,0 +1,16 @@
+{
+  "name": "testdiscordbot",
+  "version": "1.0.0",
+  "description": "",
+  "main": "bot.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Ken Huang",
+  "license": "ISC",
+  "dependencies": {
+    "discord.io": "^2.5.1",
+    "https": "^1.0.0",
+    "winston": "^2.3.1"
+  }
+}
