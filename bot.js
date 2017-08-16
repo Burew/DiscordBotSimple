@@ -66,6 +66,8 @@ bot.on('message', function (user, userID, channelID, message, evt) {
 					message: "Must specify a subreddit:\n!img SUBREDDIT_NAME -> !img gifs"
 					});
 					});
+					
+					return;
 				}
 				
 				
