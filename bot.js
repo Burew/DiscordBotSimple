@@ -60,6 +60,15 @@ bot.on('message', function (user, userID, channelID, message, evt) {
             break;
             case 'img':
 				let subreddit = args[1];
+				if !(subreddit){
+					bot.sendMessage({
+					to: channelID,
+					message: "Must specify a subreddit:\n!img SUBREDDIT_NAME -> !img gifs"
+					});
+					});
+				}
+				
+				
 				const options = {
 					hostname: 'api.imgur.com',
 					path: `/3/gallery/r/${subreddit}`,
@@ -72,9 +81,6 @@ bot.on('message', function (user, userID, channelID, message, evt) {
 				  //console.log('headers:', res.headers);
  				  res.on('data', (d) => {body.push(d); })
 				  .on('end', () => {
-					
-					
-					  
 					body = Buffer.concat(body).toString();
 					let botMessage = getRandImg(JSON.parse(body));
 										
