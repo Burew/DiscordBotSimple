@@ -97,7 +97,7 @@ bot.on('message', function (user, userID, channelID, message, evt) {
 				
 				bot.sendMessage({
                     to: channelID,
-                    message: `NSFW is currently set to ${(allowNSFW) ? "On, links marked as nsfw will be hidden" : "Off, links marked as nsfw will be shown"}.`
+                    message: `NSFW is currently set to ${(allowNSFW) ? "On, nsfw links will be shown" : "Off, nsfw links will be hidden"}.`
                 });
 				
 
@@ -123,7 +123,7 @@ bot.on('message', function (user, userID, channelID, message, evt) {
 					return;
 				}
 				
-				if ( !allowNSFW || ["poop", "scat", "ride", "feces"].includes(subreddit) ){
+				if (!allowNSFW && ["poop", "scat", "ride", "feces"].includes(subreddit) ){
 					bot.sendMessage({
 						to: channelID,
 						message: " 	*Please check yourself before you wreck yourself*"
