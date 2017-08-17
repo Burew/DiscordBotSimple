@@ -75,7 +75,7 @@ bot.on('message', function (user, userID, channelID, message, evt) {
 				
 				subreddit = subreddit.toLowerCase(); //make it consistent
 				
-				if (cache[subreddit] && cache[subreddit].links.length > 30){ 
+				if (cache[subreddit] && cache[subreddit].links.length > 0){ 
 					logger.info("Cache used");
 					bot.sendMessage({
 						to: channelID,
@@ -92,15 +92,22 @@ bot.on('message', function (user, userID, channelID, message, evt) {
 				let body = [];
 				
 				https.get(options, (res) => {
-				  //console.log('statusCode:', res.statusCode);
-				  //console.log('headers:', res.headers);
+				  // console.log('statusCode:', res.statusCode);
+				  // console.log('headers:', res.headers);
 				  res.on('data', (d) => {body.push(d); })
 				  .on('end', () => {
 					body = Buffer.concat(body).toString();
 					
-					cache[subreddit] = makeCacheObject(JSON.parse(body));
-					let botMessage = getRandImg(cache[subreddit]);
-										
+					//check for response body contents
+					let rawBodyInfo = JSON.parse(body);
+					let botMessage;
+					if (rawBodyInfo.data.length > 0){
+						cache[subreddit] = makeCacheObject(rawBodyInfo);
+						botMessage = getRandImg(cache[subreddit]);
+					} else {
+						botMessage = `Error: no images for subreddit '${subreddit}' found`;
+					}
+					
 					bot.sendMessage({
 						to: channelID,
 						message: botMessage
