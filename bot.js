@@ -123,7 +123,7 @@ bot.on('message', function (user, userID, channelID, message, evt) {
 					return;
 				}
 				
-				if ( ["poop", "scat", "ride", "feces"].includes(subreddit) ){
+				if ( allowNSFW && ["poop", "scat", "ride", "feces"].includes(subreddit) ){
 					bot.sendMessage({
 						to: channelID,
 						message: " 	*Please check yourself before you wreck yourself*"
