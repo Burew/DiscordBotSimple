@@ -17,17 +17,22 @@ function getRandomInt(min, max) {
   return Math.floor(Math.random() * (max - min)) + min; //The maximum is exclusive and the minimum is inclusive
 }
 
-function getRandImg(json){
-	logger.info("getRandImg called w/ args");
-	if (json && json.data){
-		console.log("inside: " + json.data[getRandomInt(0, json.data.length)]["link"]);
-		return json.data[getRandomInt(0, json.data.length)]["link"];
-	} 
-	else  
-		return null;
+ function getRandImg(cacheObject){ 
+	const index = getRandomInt(0, cacheObject.links.length);
+	console.log(`current length: ${cacheObject.links.length}, current index: ${index}`);
+	return cacheObject.links.splice(index,1)[0];
+	 
+}
+
+function makeCacheObject(json){
+	return {
+		links: json.data.map(item => item["link"]),
+		count: 0
+	}
 }
 
 const clientId = "d839b8dd67f5cb7";
+let cache = {};
 
 var bot = new Discord.Client({
    token: auth.token,
@@ -46,13 +51,11 @@ bot.on('message', function (user, userID, channelID, message, evt) {
 	logger.info(`User: ${user} on channel ${channelID} with message ${message}`);
 	
     if (message.substring(0, 1) == '!') {
-        var args = message.substring(1).split(' ');
+        var args = message.substring(1).split(' '); //remove ! and split args
         var cmd = args[0];
 		
-		// TODO: add safety for nsfw images/gifs -> specific syntax just for it
-		
-        //args = args.splice(1, 1);
-        switch(cmd) {
+        const param = args.splice(1, 1)[0]; //keep on splicing to get more args
+        switch(cmd) {	
             // !ping
             case 'ping':
                 bot.sendMessage({
@@ -61,11 +64,22 @@ bot.on('message', function (user, userID, channelID, message, evt) {
                 });
             break;
             case 'img':
-				let subreddit = args[1];
+				let subreddit = param;
 				if (!subreddit){
 					bot.sendMessage({
 					to: channelID,
-					message: "Must specify a subreddit:\n!img SUBREDDIT_NAME -> !img gifs"
+					message: "Must specify a subreddit!\nEx:\n!img subreddit_name --> !img gifs"
+					});
+					return;
+				}
+				
+				subreddit = subreddit.toLowerCase(); //make it consistent
+				
+				if (cache[subreddit] && cache[subreddit].links.length > 30){ 
+					logger.info("Cache used");
+					bot.sendMessage({
+						to: channelID,
+						message: getRandImg(cache[subreddit])
 					});
 					return;
 				}
@@ -80,14 +94,16 @@ bot.on('message', function (user, userID, channelID, message, evt) {
 				https.get(options, (res) => {
 				  //console.log('statusCode:', res.statusCode);
 				  //console.log('headers:', res.headers);
- 				  res.on('data', (d) => {body.push(d); })
+				  res.on('data', (d) => {body.push(d); })
 				  .on('end', () => {
 					body = Buffer.concat(body).toString();
-					let botMessage = getRandImg(JSON.parse(body));
+					
+					cache[subreddit] = makeCacheObject(JSON.parse(body));
+					let botMessage = getRandImg(cache[subreddit]);
 										
 					bot.sendMessage({
-					to: channelID,
-					message: botMessage
+						to: channelID,
+						message: botMessage
 					});
 					});
 				 
@@ -95,6 +111,11 @@ bot.on('message', function (user, userID, channelID, message, evt) {
 				  console.error(e);
 				});
             break;
+			default:
+				bot.sendMessage({
+					to: channelID,
+					message: "Message not found"
+				});
          }
      }
 });
