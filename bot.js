@@ -97,7 +97,7 @@ bot.on('message', function (user, userID, channelID, message, evt) {
 				
 				bot.sendMessage({
                     to: channelID,
-                    message: `NSFW is currently set to ${(allowNSFW) ? "On" : "Off"}.`
+                    message: `NSFW is currently set to ${(allowNSFW) ? "On, links marked as nsfw will be hidden" : "Off, links marked as nsfw will be shown"}.`
                 });
 				
 
@@ -107,7 +107,7 @@ bot.on('message', function (user, userID, channelID, message, evt) {
 				if (!subreddit){
 					bot.sendMessage({
 					to: channelID,
-					message: "Must specify a subreddit!\nEx:\n!img subreddit_name --> !img gifs"
+					message: "**Must specify a subreddit!**\nEx:\n!img subreddit_name --> !img gifs"
 					});
 					return;
 				}
@@ -119,6 +119,14 @@ bot.on('message', function (user, userID, channelID, message, evt) {
 					bot.sendMessage({
 						to: channelID,
 						message: getRandImg(cache[subreddit])
+					});
+					return;
+				}
+				
+				if ( ["poop", "scat", "ride", "feces"].includes(subreddit) ){
+					bot.sendMessage({
+						to: channelID,
+						message: " 	*Please check yourself before you wreck yourself*"
 					});
 					return;
 				}
@@ -139,10 +147,12 @@ bot.on('message', function (user, userID, channelID, message, evt) {
 					
 					//check for response body contents
 					let rawBodyInfo = JSON.parse(body);
-					let botMessage;
+					let botMessage = "";
 					if (rawBodyInfo.data.length > 0){
 						cache[subreddit] = makeCacheObject(rawBodyInfo);
-						botMessage = getRandImg(cache[subreddit]);
+						if (rawBodyInfo.data.length < 100)
+							botMessage = `**Warning! Only ${rawBodyInfo.data.length} image(s) associated with the __${subreddit}__ SubReddit imgur**\n`
+						botMessage += getRandImg(cache[subreddit]);
 					} else {
 						botMessage = `Error: no images for subreddit '${subreddit}' found`;
 					}
@@ -157,11 +167,6 @@ bot.on('message', function (user, userID, channelID, message, evt) {
 				  console.error(e);
 				});
             break;
-			default:
-				bot.sendMessage({
-					to: channelID,
-					message: "Invalid Command"
-				});
          }
      }
 });
