@@ -9,7 +9,12 @@ logger.add(logger.transports.Console, {
     colorize: true
 });
 logger.level = 'debug';
+
+
 // Initialize Discord Bot
+const clientId = "d839b8dd67f5cb7";
+let allowNSFW = false;
+let cache = {};
 
 function getRandomInt(min, max) {
   min = Math.ceil(min);
@@ -20,19 +25,29 @@ function getRandomInt(min, max) {
  function getRandImg(cacheObject){ 
 	const index = getRandomInt(0, cacheObject.links.length);
 	console.log(`current length: ${cacheObject.links.length}, current index: ${index}`);
-	return cacheObject.links.splice(index,1)[0];
-	 
+	let currentLink = cacheObject.links.splice(index,1)[0];
+	
+	if (currentLink.nsfw == false || currentLink == null){
+		return currentLink.url;
+	} else {
+		if (allowNSFW && currentLink.nsfw == true)
+			return currentLink.url;
+		else
+			return `You cant handle this NSFW img, bro! Here is an unrendered link:\n${currentLink.url.substring(7, currentLink.url.length)}`;
+	}
 }
 
 function makeCacheObject(json){
 	return {
-		links: json.data.map(item => item["link"]),
+	links: json.data.map( 
+			(item) => {return { url:item["link"], 
+								nsfw:item["nsfw"]} }
+			),
 		count: 0
 	}
 }
 
-const clientId = "d839b8dd67f5cb7";
-let cache = {};
+
 
 var bot = new Discord.Client({
    token: auth.token,
@@ -62,6 +77,30 @@ bot.on('message', function (user, userID, channelID, message, evt) {
                     to: channelID,
                     message: 'Pong!'
                 });
+            break;
+            case 'pong':
+                bot.sendMessage({
+                    to: channelID,
+                    message: 'Ping!'
+                });
+            break;
+			case 'nsfw':
+				if (!param){
+					//not sure what to do here...
+				} else if (param === "on"){
+					allowNSFW = true;
+				} else if (param === "off"){
+					allowNSFW = false;
+				} else if (param === "toggle"){
+					allowNSFW = !allowNSFW;
+				}
+				
+				bot.sendMessage({
+                    to: channelID,
+                    message: `NSFW is currently set to ${(allowNSFW) ? "On" : "Off"}.`
+                });
+				
+
             break;
             case 'img':
 				let subreddit = param;
@@ -121,7 +160,7 @@ bot.on('message', function (user, userID, channelID, message, evt) {
 			default:
 				bot.sendMessage({
 					to: channelID,
-					message: "Message not found"
+					message: "Invalid Command"
 				});
          }
      }
