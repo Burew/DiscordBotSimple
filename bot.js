@@ -24,7 +24,7 @@ function getRandomInt(min, max) {
 
  function getRandImg(cacheObject){ 
 	const index = getRandomInt(0, cacheObject.links.length);
-	console.log(`current length: ${cacheObject.links.length}, current index: ${index}`);
+	//console.log(`current length: ${cacheObject.links.length}, current index: ${index}`);
 	let currentLink = cacheObject.links.splice(index,1)[0];
 	
 	if (currentLink.nsfw == false || currentLink == null){
@@ -39,10 +39,7 @@ function getRandomInt(min, max) {
 
 function makeCacheObject(json){
 	return {
-	links: json.data.map( 
-			(item) => {return { url:item["link"], 
-								nsfw:item["nsfw"]} }
-			),
+	links: json.data.map((item) => {return {url:item["gifv"] || item["link"], nsfw:item["nsfw"]} }),
 		count: 0
 	}
 }
@@ -78,6 +75,17 @@ bot.on('message', function (user, userID, channelID, message, evt) {
                     message: 'Pong!'
                 });
             break;
+			case 'flush':
+				if (param){
+					delete cache[param];
+				} else {
+					cache = {};
+				}
+                bot.sendMessage({
+                    to: channelID,
+                    message: `*Cache flushed, these links be fresh now${param ? ' for query ' + param : ""}*`
+                });
+            break;
             case 'pong':
                 bot.sendMessage({
                     to: channelID,
@@ -85,22 +93,19 @@ bot.on('message', function (user, userID, channelID, message, evt) {
                 });
             break;
 			case 'nsfw':
-				if (!param){
-					//not sure what to do here...
-				} else if (param === "on"){
-					allowNSFW = true;
-				} else if (param === "off"){
-					allowNSFW = false;
-				} else if (param === "toggle"){
-					allowNSFW = !allowNSFW;
+				if (param){
+					if (param === "on"){
+						allowNSFW = true;
+					} else if (param === "off"){
+						allowNSFW = false;
+					} else if (param === "toggle"){
+						allowNSFW = !allowNSFW;
+					}
 				}
-				
 				bot.sendMessage({
                     to: channelID,
                     message: `NSFW is currently set to ${(allowNSFW) ? "On, nsfw links will be shown" : "Off, nsfw links will be hidden"}.`
                 });
-				
-
             break;
             case 'img':
 				let subreddit = param;
@@ -123,10 +128,10 @@ bot.on('message', function (user, userID, channelID, message, evt) {
 					return;
 				}
 				
-				if (!allowNSFW && ["poop", "scat", "ride", "feces"].includes(subreddit) ){
+				if (allowNSFW == false && ["poop", "scat", "ride", "feces", "nice"].includes(subreddit) ){
 					bot.sendMessage({
 						to: channelID,
-						message: " 	*Please check yourself before you wreck yourself*"
+						message: "*Please check yourself before you wreck yourself*"
 					});
 					return;
 				}
