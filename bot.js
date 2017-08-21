@@ -38,8 +38,10 @@ function getRandomInt(min, max) {
 }
 
 function makeCacheObject(json){
+	let links = json.data.filter( (item) => item["size"] != 0 ).map((item) => {return {url:item["gifv"] || item["link"], nsfw:item["nsfw"]} });
+	
 	return {
-	links: json.data.map((item) => {return {url:item["gifv"] || item["link"], nsfw:item["nsfw"]} }),
+		links: links,
 		count: 0
 	}
 }
@@ -156,7 +158,7 @@ bot.on('message', function (user, userID, channelID, message, evt) {
 					if (rawBodyInfo.data.length > 0){
 						cache[subreddit] = makeCacheObject(rawBodyInfo);
 						if (rawBodyInfo.data.length < 100)
-							botMessage = `**Warning! Only ${rawBodyInfo.data.length} image(s) associated with the __${subreddit}__ SubReddit imgur**\n`
+							botMessage = `**Warning! Only ${cache[subreddit].links.length} image(s) associated with the __${subreddit}__ SubReddit imgur**\n`
 						botMessage += getRandImg(cache[subreddit]);
 					} else {
 						botMessage = `Error: no images for subreddit '${subreddit}' found`;
