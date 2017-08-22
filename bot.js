@@ -23,6 +23,10 @@ function getRandomInt(min, max) {
 }
 
  function getRandImg(cacheObject){ 
+	if (cacheObject.filteredLinkCount == 0){
+		return `Sorry, no valid images for this subreddit`;
+	}
+	
 	const index = getRandomInt(0, cacheObject.links.length);
 	//console.log(`current length: ${cacheObject.links.length}, current index: ${index}`);
 	let currentLink = cacheObject.links.splice(index,1)[0];
@@ -42,7 +46,7 @@ function makeCacheObject(json){
 	
 	return {
 		links: links,
-		count: 0
+		filteredLinkCount: links.length
 	}
 }
 
@@ -157,7 +161,7 @@ bot.on('message', function (user, userID, channelID, message, evt) {
 					let botMessage = "";
 					if (rawBodyInfo.data.length > 0){
 						cache[subreddit] = makeCacheObject(rawBodyInfo);
-						if (rawBodyInfo.data.length < 100)
+						if (cache[subreddit].links.length < 100)
 							botMessage = `**Warning! Only ${cache[subreddit].links.length} image(s) associated with the __${subreddit}__ SubReddit imgur**\n`
 						botMessage += getRandImg(cache[subreddit]);
 					} else {
