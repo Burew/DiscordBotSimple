@@ -161,7 +161,7 @@ bot.on('message', function (user, userID, channelID, message, evt) {
 					let botMessage = "";
 					if (rawBodyInfo.data.length > 0){
 						cache[subreddit] = makeCacheObject(rawBodyInfo);
-						if (cache[subreddit].links.length < 100)
+						if (cache[subreddit].links.length < 50)
 							botMessage = `**Warning! Only ${cache[subreddit].links.length} image(s) associated with the __${subreddit}__ SubReddit imgur**\n`
 						botMessage += getRandImg(cache[subreddit]);
 					} else {
