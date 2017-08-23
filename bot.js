@@ -69,10 +69,7 @@ bot.on('ready', function (evt) {
 		   { console.error(err);}
 		  else
 		   { console.log(result.rows); 
-			restrictList = result.rows;
-			console.log("Length of rows: " + restrictList.length);
-			console.log(restrictList[0]);
-			console.log(restrictList[0].item);
+			restrictList = result.rows.map( row => row.item );
 			}
 		});
 	});
