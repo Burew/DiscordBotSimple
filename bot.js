@@ -11,7 +11,6 @@ logger.add(logger.transports.Console, {
 });
 logger.level = 'debug';
 
-
 // Initialize Discord Bot
 const clientId = process.env.IMGUR_CLIENT_ID; //"d839b8dd67f5cb7";
 let allowNSFW = false;
@@ -45,7 +44,6 @@ function getRandomInt(min, max) {
 
 function makeCacheObject(json){
 	let links = json.data.filter( (item) => item["size"] != 0 ).map((item) => {return {url:item["gifv"] || item["link"], nsfw:item["nsfw"]} });
-	
 	return {
 		links: links,
 		filteredLinkCount: links.length
@@ -63,15 +61,14 @@ bot.on('ready', function (evt) {
     logger.info('Connected');
     logger.info('Logged in as: ');
     logger.info(bot.username + ' - (' + bot.id + ')');
-	
-	//load restrict list
+			
 	pg.connect(process.env.DATABASE_URL, function(err, client, done) {
 		client.query('SELECT * FROM restrict_table', function(err, result) {
-			done();
-			if (err)
-			{ console.error(err); response.send("Error " + err); }
-			else
-			{ response.render('pages/db', {results: result.rows} ); }
+		  done();
+		  if (err)
+		   { console.error(err);}
+		  else
+		   { console.log(result.rows); }
 		});
 	});
   

@@ -10,8 +10,9 @@
   "license": "ISC",
   "dependencies": {
     "discord.io": "^2.5.1",
+    "express": "4.15.2",
     "https": "^1.0.0",
-    "pg": "6.x",
+    "pg": "^6.4.2",
     "winston": "^2.3.1"
   }
 }
