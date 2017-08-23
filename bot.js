@@ -63,12 +63,15 @@ bot.on('ready', function (evt) {
     logger.info(bot.username + ' - (' + bot.id + ')');
 			
 	pg.connect(process.env.DATABASE_URL, function(err, client, done) {
-		client.query('SELECT * FROM restrict_table', function(err, result) {
+		client.query('SELECT * FROM restrict_list', function(err, result) {
 		  done();
 		  if (err)
 		   { console.error(err);}
 		  else
-		   { console.log(result.rows); }
+		   { console.log(result.rows); 
+			restrictList = result.rows;
+			console.log("Length of rows: " + restrictList.length);
+			}
 		});
 	});
   
