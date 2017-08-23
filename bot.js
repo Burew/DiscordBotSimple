@@ -63,7 +63,7 @@ bot.on('ready', function (evt) {
     logger.info(bot.username + ' - (' + bot.id + ')');
 			
 	pg.connect(process.env.DATABASE_URL, function(err, client, done) {
-		client.query('SELECT * FROM restrict_list', function(err, result) {
+		client.query('SELECT item::string FROM restrict_list', function(err, result) {
 		  done();
 		  if (err)
 		   { console.error(err);}
