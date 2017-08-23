@@ -1,6 +1,7 @@
 var Discord = require('discord.io');
 var logger = require('winston');
 const https = require('https');
+var pg = require('pg');
 
 var auth = require('./auth.json');
 // Configure logger settings
@@ -15,6 +16,7 @@ logger.level = 'debug';
 const clientId = process.env.IMGUR_CLIENT_ID; //"d839b8dd67f5cb7";
 let allowNSFW = false;
 let cache = {};
+let restrictList = [];
 
 function getRandomInt(min, max) {
   min = Math.ceil(min);
@@ -61,6 +63,18 @@ bot.on('ready', function (evt) {
     logger.info('Connected');
     logger.info('Logged in as: ');
     logger.info(bot.username + ' - (' + bot.id + ')');
+	
+	//load restrict list
+	pg.connect(process.env.DATABASE_URL, function(err, client, done) {
+		client.query('SELECT * FROM restrict_table', function(err, result) {
+			done();
+			if (err)
+			{ console.error(err); response.send("Error " + err); }
+			else
+			{ response.render('pages/db', {results: result.rows} ); }
+		});
+	});
+  
 });
 
 bot.on('message', function (user, userID, channelID, message, evt) {
@@ -134,7 +148,7 @@ bot.on('message', function (user, userID, channelID, message, evt) {
 					return;
 				}
 				
-				if (allowNSFW == false && ["poop", "scat", "ride", "feces", "nice"].includes(subreddit) ){
+				if (allowNSFW == false && restrictList.includes(subreddit) ){
 					bot.sendMessage({
 						to: channelID,
 						message: "*Please check yourself before you wreck yourself*"
