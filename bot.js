@@ -12,7 +12,7 @@ logger.level = 'debug';
 
 
 // Initialize Discord Bot
-const clientId = "d839b8dd67f5cb7";
+const clientId = process.env.IMGUR_CLIENT_ID; //"d839b8dd67f5cb7";
 let allowNSFW = false;
 let cache = {};
 
