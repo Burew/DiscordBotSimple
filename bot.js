@@ -24,18 +24,17 @@ function getRandomInt(min, max) {
 }
 
  function getRandImg(cacheObject){ 
-	if (cacheObject.filteredLinkCount == 0){
+	if (cacheObject.filteredLinkCount === 0){
 		return `Sorry, no valid images for this subreddit`;
 	}
 	
 	const index = getRandomInt(0, cacheObject.links.length);
-	//console.log(`current length: ${cacheObject.links.length}, current index: ${index}`);
 	let currentLink = cacheObject.links.splice(index,1)[0];
 	
-	if (currentLink.nsfw == false || currentLink == null){
+	if (currentLink.nsfw === false /*|| currentLink == null*/){
 		return currentLink.url;
 	} else {
-		if (allowNSFW && currentLink.nsfw == true)
+		if (allowNSFW && currentLink.nsfw === true)
 			return currentLink.url;
 		else
 			return `You cant handle this NSFW img, bro! Here is an unrendered link:\n${currentLink.url.substring(7, currentLink.url.length)}`;
@@ -50,30 +49,29 @@ function makeCacheObject(json){
 	}
 }
 
-
-
 var bot = new Discord.Client({
    token: auth.token,
    autorun: true
 });
 
+
+
 bot.on('ready', function (evt) {
     logger.info('Connected');
     logger.info('Logged in as: ');
     logger.info(bot.username + ' - (' + bot.id + ')');
-			
+				
 	pg.connect(process.env.DATABASE_URL, function(err, client, done) {
 		client.query('SELECT item FROM restrict_list', function(err, result) {
 		  done();
 		  if (err)
 		   { console.error(err);}
 		  else
-		   { console.log(result.rows); 
+		   { 
 			restrictList = result.rows.map( row => row.item );
 			}
 		});
 	});
-  
 });
 
 bot.on('message', function (user, userID, channelID, message, evt) {
@@ -87,11 +85,16 @@ bot.on('message', function (user, userID, channelID, message, evt) {
 		
         const param = args.splice(1, 1)[0]; //keep on splicing to get more args
         switch(cmd) {	
-            // !ping
             case 'ping':
                 bot.sendMessage({
                     to: channelID,
                     message: 'Pong!'
+                });
+            break;
+            case 'pong':
+                bot.sendMessage({
+                    to: channelID,
+                    message: 'Ping!'
                 });
             break;
 			case 'flush':
@@ -103,12 +106,6 @@ bot.on('message', function (user, userID, channelID, message, evt) {
                 bot.sendMessage({
                     to: channelID,
                     message: `*Cache flushed, these links be fresh now${param ? ' for query ' + param : ""}*`
-                });
-            break;
-            case 'pong':
-                bot.sendMessage({
-                    to: channelID,
-                    message: 'Ping!'
                 });
             break;
 			case 'nsfw':
@@ -136,7 +133,7 @@ bot.on('message', function (user, userID, channelID, message, evt) {
 					return;
 				}
 				
-				subreddit = subreddit.toLowerCase(); //make it consistent
+				subreddit = subreddit.toLowerCase();
 				
 				if (cache[subreddit] && cache[subreddit].links.length > 0){ 
 					logger.info("Cache used");
@@ -147,7 +144,7 @@ bot.on('message', function (user, userID, channelID, message, evt) {
 					return;
 				}
 				
-				if (allowNSFW == false && restrictList.includes(subreddit) ){
+				if (allowNSFW === false && restrictList.includes(subreddit) ){
 					bot.sendMessage({
 						to: channelID,
 						message: "*Please check yourself before you wreck yourself*"
@@ -163,8 +160,6 @@ bot.on('message', function (user, userID, channelID, message, evt) {
 				let body = [];
 				
 				https.get(options, (res) => {
-				  // console.log('statusCode:', res.statusCode);
-				  // console.log('headers:', res.headers);
 				  res.on('data', (d) => {body.push(d); })
 				  .on('end', () => {
 					body = Buffer.concat(body).toString();
