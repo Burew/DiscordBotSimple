@@ -12,7 +12,7 @@ logger.add(logger.transports.Console, {
 logger.level = 'debug';
 
 // Initialize Discord Bot
-const clientId = process.env.IMGUR_CLIENT_ID; //"d839b8dd67f5cb7";
+const clientId = process.env.IMGUR_CLIENT_ID;  //"d839b8dd67f5cb7";
 let allowNSFW = false;
 let cache = {};
 let restrictList = [];
@@ -60,8 +60,9 @@ bot.on('ready', function (evt) {
     logger.info('Connected');
     logger.info('Logged in as: ');
     logger.info(bot.username + ' - (' + bot.id + ')');
-				
-	pg.connect(process.env.DATABASE_URL, function(err, client, done) {
+	logger.info(process.env);
+	
+	pg.connect(process.env.DATABASE_URL , function(err, client, done) {
 		client.query('SELECT item FROM restrict_list', function(err, result) {
 		  done();
 		  if (err)
@@ -134,20 +135,20 @@ bot.on('message', function (user, userID, channelID, message, evt) {
 				}
 				
 				subreddit = subreddit.toLowerCase();
+
+				if (allowNSFW === false && restrictList.includes(subreddit) ){
+					bot.sendMessage({
+						to: channelID,
+						message: "*Please check yourself before you wreck yourself*"
+					});
+					return;
+				}
 				
 				if (cache[subreddit] && cache[subreddit].links.length > 0){ 
 					logger.info("Cache used");
 					bot.sendMessage({
 						to: channelID,
 						message: getRandImg(cache[subreddit])
-					});
-					return;
-				}
-				
-				if (allowNSFW === false && restrictList.includes(subreddit) ){
-					bot.sendMessage({
-						to: channelID,
-						message: "*Please check yourself before you wreck yourself*"
 					});
 					return;
 				}
