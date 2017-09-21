@@ -62,7 +62,7 @@ bot.on('ready', function (evt) {
     logger.info('Connected');
     logger.info('Logged in as: ');
     logger.info(bot.username + ' - (' + bot.id + ')');
-	logger.info(process.env);
+	//logger.info(process.env);
 
   //connect to database
 	pg.connect(process.env.DATABASE_URL , function(err, client, done) {
@@ -72,7 +72,7 @@ bot.on('ready', function (evt) {
 		   { console.error(err);}
 		  else
 		   {
-			restrictList = result.rows.map( row => row.item );
+			restrictList = result.rows.map( row => row.item ) || [];
 			}
 		});
 	});
@@ -81,9 +81,8 @@ bot.on('ready', function (evt) {
 
 bot.on('message', function (user, userID, channelID, message, evt) {
     // Our bot needs to know if it will execute a command
-    // It will listen for messages that will start with `!`
-	logger.info(`User: ${user} on channel ${channelID} with message ${message}. NSFW Channel: ${message.channel.nsfw}`);
-
+    // It will listen for messages that will start with !
+	logger.info(`User: ${user} on channel ${channelID} with message ${message}. `);
     if (message.substring(0, 1) == '!') {
         var args = message.substring(1).split(' '); //remove ! and split args
         var cmd = args[0];
@@ -153,7 +152,7 @@ bot.on('message', function (user, userID, channelID, message, evt) {
       					logger.info("Cache used");
       					bot.sendMessage({
       						to: channelID,
-      						message: getRandImg(cache[subreddit], message.channel.nsfw )
+      						message: getRandImg(cache[subreddit], bot.channels[channelID]["nsfw"])
       					});
       					return;
       				}
@@ -177,7 +176,7 @@ bot.on('message', function (user, userID, channelID, message, evt) {
         						cache[subreddit] = makeCacheObject(rawBodyInfo);
         						if (cache[subreddit].links.length < 50)
         							botMessage = `**Warning! Only ${cache[subreddit].links.length} image(s) associated with the __${subreddit}__ SubReddit imgur**\n`
-        						botMessage += getRandImg(cache[subreddit],  message.channel.nsfw);
+        						botMessage += getRandImg(cache[subreddit], bot.channels[channelID]["nsfw"]);
         					} else {
         						botMessage = `Error: no images for subreddit '${subreddit}' found`;
         					}
