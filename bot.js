@@ -1,15 +1,8 @@
-const Discord = require('discord.io');
-const logger = require('winston');
+const Discord = require('discord.js');
 const https = require('https');
 const pg = require('pg');
 
 const auth = require('./auth.json');
-// Configure logger settings
-logger.remove(logger.transports.Console);
-logger.add(logger.transports.Console, {
-    colorize: true
-});
-logger.level = 'debug';
 
 // Initialize Discord Bot
 const clientId = process.env.IMGUR_CLIENT_ID || auth.IMGUR_CLIENT_ID;
@@ -43,26 +36,20 @@ function getRandomInt(min, max) {
 }
 
 function makeCacheObject(json){
-	let links = json.data.filter( (item) => item["size"] != 0 ).map((item) => {
-                                                                return {url:item["gifv"] || item["link"], nsfw:item["nsfw"]} });
+	let links = json.data
+                    .filter( (item) => item["size"] != 0 ) //remove dead links
+                    .map((item) => {return {url:item["gifv"] || item["link"], nsfw:item["nsfw"]} }); //extract urls from json
 	return {
 		links: links,
 		filteredLinkCount: links.length
 	}
 }
 
-var bot = new Discord.Client({
-   token: auth.token,
-   autorun: true
-});
+var bot = new Discord.Client();
 
-
-
-bot.on('ready', function (evt) {
-    logger.info('Connected');
-    logger.info('Logged in as: ');
-    logger.info(bot.username + ' - (' + bot.id + ')');
-	//logger.info(process.env);
+bot.on('ready', () => {
+  console.log('Bot is ready');
+	//console.log(process.env);
 
   //connect to database
 	pg.connect(process.env.DATABASE_URL , function(err, client, done) {
@@ -79,27 +66,20 @@ bot.on('ready', function (evt) {
 
 });
 
-bot.on('message', function (user, userID, channelID, message, evt) {
-    // Our bot needs to know if it will execute a command
-    // It will listen for messages that will start with !
-	logger.info(`User: ${user} on channel ${channelID} with message ${message}. `);
-    if (message.substring(0, 1) == '!') {
-        var args = message.substring(1).split(' '); //remove ! and split args
+bot.on('message', function (message) {
+	//console.log(`User: ${user} on channel ${channelID} with message ${message}. `);
+  console.log("####################################### Current Channel ###################################")
+  console.log(message.channel);
+  console.log(message.channel.nsfw);
+
+    if (message.content.substring(0, 1) == '!') {
+        var args = message.content.substring(1).split(' '); //remove ! and split args
         var cmd = args[0];
 
         const param = args.splice(1, 1)[0]; //keep on splicing to get more args
         switch(cmd) {
             case 'ping':
-                bot.sendMessage({
-                    to: channelID,
-                    message: 'Pong!'
-                });
-            break;
-            case 'pong':
-                bot.sendMessage({
-                    to: channelID,
-                    message: 'Ping!'
-                });
+              message.channel.send(`:ping_pong:\n*${Date.now() - message.createdTimestamp} ms*`);
             break;
       			case 'flush':
       				if (param){
@@ -107,11 +87,8 @@ bot.on('message', function (user, userID, channelID, message, evt) {
       				} else {
       					cache = {};
       				}
-                      bot.sendMessage({
-                          to: channelID,
-                          message: `*Cache flushed, these links be fresh now`
-                      });
-                  break;
+              message.channel.send(`Cache Flushed, these links be fresh now`);
+            break;
       			case 'nsfw':
       				if (param){
       					if (param === "on"){
@@ -122,39 +99,23 @@ bot.on('message', function (user, userID, channelID, message, evt) {
       						allowNSFW = !allowNSFW;
       					}
       				}
-      				bot.sendMessage({
-                          to: channelID,
-                          message: `NSFW is currently set to ${(allowNSFW) ? "On, nsfw links will be shown" : "Off, nsfw links will be hidden"}.`
-                      });
-                  break;
-                  case 'img':
-      				let subreddit = param;
+              message.channel.send(`NSFW is currently set to ${(allowNSFW) ? "On, nsfw links will be shown" : "Off, nsfw links will be hidden"}.`);
+            break;
+            case 'img':
+      				let subreddit = param.toLowerCase();
       				if (!subreddit){
-      					bot.sendMessage({
-      					to: channelID,
-      					message: "**Must specify a subreddit!**\nEx:\n!img subreddit_name --> !img gifs"
-      					});
+                message.channel.send("**Must specify a subreddit!**\nEx:\n!img subreddit_name --> !img gifs");
       					return;
       				}
 
-      				subreddit = subreddit.toLowerCase();
-
       				if (allowNSFW === false && restrictList.includes(subreddit) ){
-      					bot.sendMessage({
-      						to: channelID,
-      						message: "*Please check yourself before you wreck yourself*"
-      					});
+                message.channel.send("*Please check yourself before you wreck yourself*");
       					return;
       				}
 
               //get from cache if available
       				if (cache[subreddit] && cache[subreddit].links.length > 0){
-      					logger.info("Cache used");
-      					bot.sendMessage({
-      						to: channelID,
-      						message: getRandImg(cache[subreddit], bot.channels[channelID]["nsfw"])
-      					});
-      					return;
+                message.channel.send(getRandImg(cache[subreddit], message.channel.nsfw));
       				}
 
       				const options = {
@@ -176,15 +137,12 @@ bot.on('message', function (user, userID, channelID, message, evt) {
         						cache[subreddit] = makeCacheObject(rawBodyInfo);
         						if (cache[subreddit].links.length < 50)
         							botMessage = `**Warning! Only ${cache[subreddit].links.length} image(s) associated with the __${subreddit}__ SubReddit imgur**\n`
-        						botMessage += getRandImg(cache[subreddit], bot.channels[channelID]["nsfw"]);
+        						botMessage += getRandImg(cache[subreddit], message.channel.nsfw);
         					} else {
         						botMessage = `Error: no images for subreddit '${subreddit}' found`;
         					}
 
-        					bot.sendMessage({
-        						to: channelID,
-        						message: botMessage
-        					});
+                  message.channel.send(botMessage);
 
 					      }); //end http msg received
       				}).on('error', (e) => {
@@ -194,3 +152,6 @@ bot.on('message', function (user, userID, channelID, message, evt) {
          } //end switch
      }
 });
+
+
+bot.login(auth.token);

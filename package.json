@@ -1,7 +1,7 @@
 {
   "name": "testdiscordbot",
   "version": "1.0.0",
-  "description": "",
+  "description": "BoBeep: a discord bot built for my friends and I",
   "main": "bot.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -9,10 +9,9 @@
   "author": "Ken Huang",
   "license": "ISC",
   "dependencies": {
-    "discord.io": "^2.5.1",
+    "discord.js": "^11.2.1",
     "express": "4.15.2",
     "https": "^1.0.0",
-    "pg": "^6.4.2",
-    "winston": "^2.3.1"
+    "pg": "^6.4.2"
   }
 }
