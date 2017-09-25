@@ -72,6 +72,7 @@ bot.on('ready', () => {
         console.error(err);}
 		  else {
         restrictList = result.rows.map( row => row.item ) || [];
+        console.log(restrictList);
 			}
 		});
 	});
@@ -91,9 +92,9 @@ bot.on('message', function (message) {
     return;
 
     var args = message.content.substring(1).split(' '); //remove ! and split args
-    var cmd = args[0].toLowerCase();
+    var cmd = args.splice(0,1).toString().toLowerCase();
 
-    const param = args.splice(1, 1)[0]; //keep on splicing to get more args
+    const param = args.splice(0, 1)[0]; //keep on splicing to get more args
     switch(cmd) {
         case 'ping':
           message.channel.send(`:ping_pong:\n*${Date.now() - message.createdTimestamp} ms*`);
@@ -166,14 +167,14 @@ bot.on('message', function (message) {
       		if (!voiceChannel){
       			return message.reply(`Please join a voice channel first!`); //mentions the user
       		}
-
-      		youTube.search(param, 1, function(error, result) {
+          console.log("youTube search: " + param + " " + args.join(' '));
+      		youTube.search(param + " " + args.join(' '), 1, function(error, result) {
       		  if (error) {
       		    console.log(error);
       		  }
       		  else {
       		    const link = result.items.map( item => item.id.videoId); //filterYoutubeVideoLinks(result);
-              console.log(link);
+              console.log(link); //since this array only has 1 value, its toString method will return what we want
       				voiceChannel.join()
       					.then(voiceConnnection => {
       						const stream = ytdl(`https://www.youtube.com/watch?v=${link}`, { filter: 'audioonly' });
