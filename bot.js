@@ -1,8 +1,15 @@
 const Discord = require('discord.js');
-var rp = require('request-promise');
+const rp = require('request-promise');
 const pg = require('pg');
+const YouTube = require('youtube-node');
+const ytdl = require('ytdl-core');
 
 const auth = require('./auth.json');
+
+const bot = new Discord.Client();
+const youTube = new YouTube();
+
+youTube.setKey(auth.YOUTUBE_API_KEY);
 
 // Initialize Discord Bot
 const clientId = process.env.IMGUR_CLIENT_ID || auth.IMGUR_CLIENT_ID;
@@ -17,8 +24,8 @@ function getRandomInt(min, max) {
   return Math.floor(Math.random() * (max - min)) + min; //The maximum is exclusive and the minimum is inclusive
 }
 
- function getRandImg(cacheObject, isNsfwChannel = false){
-	if (cacheObject.filteredLinkCount === 0){
+function getRandImg(cacheObject, isNsfwChannel = false){
+  if (cacheObject.filteredLinkCount === 0){
 		return `Sorry, no valid images for this subreddit`;
 	}
 
@@ -45,7 +52,16 @@ function makeCacheObject(json){
 	}
 }
 
-var bot = new Discord.Client();
+function imgurSubredditPromise(subreddit){
+  var imgurSubredditPicOptions = {
+      uri: `https://api.imgur.com/3/gallery/r/${subreddit}`,
+      headers: {
+          'Authorization': `Client-ID ${clientId}`
+      },
+      json: true // Automatically parses the JSON string in the response
+  };
+  return rp(imgurSubredditPicOptions);
+}
 
 bot.on('ready', () => {
   //connect to database
@@ -121,15 +137,7 @@ bot.on('message', function (message) {
   				}
 
           //make new request to imgur
-          var imgurSubredditPicOptions = {
-      		    uri: `https://api.imgur.com/3/gallery/r/${subreddit}`,
-      		    headers: {
-      		        'Authorization': `Client-ID ${clientId}`
-      		    },
-      		    json: true // Automatically parses the JSON string in the response
-      		};
-
-          rp(imgurSubredditPicOptions)
+          imgurSubredditPromise(subreddit)
       		    .then(function (JSONdata) {
       					let botMessage = "";
       					if (JSONdata.data.length !== 0){
@@ -150,8 +158,30 @@ bot.on('message', function (message) {
         case 'imgbulk':
           let amount = parseInt(param);
           if (!isNaN(amount)){
-            //process request
+            message.channel.send("Under construction, please wait while Ken works on this eventually");
           }
+        break;
+        case 'yt':
+          const voiceChannel = message.member.voiceChannel;
+      		if (!voiceChannel){
+      			return message.reply(`Please join a voice channel first!`); //mentions the user
+      		}
+
+      		youTube.search(param, 1, function(error, result) {
+      		  if (error) {
+      		    console.log(error);
+      		  }
+      		  else {
+      		    const link = result.items.map( item => item.id.videoId); //filterYoutubeVideoLinks(result);
+              console.log(link);
+      				voiceChannel.join()
+      					.then(voiceConnnection => {
+      						const stream = ytdl(`https://www.youtube.com/watch?v=${link}`, { filter: 'audioonly' });
+      						const dispatcher = voiceConnnection.playStream(stream);
+      						dispatcher.on('end', () => voiceChannel.leave());
+      					});
+      		  }
+    		});
         break;
      } //end switch command parsing
 }); //end bot.onMessage
