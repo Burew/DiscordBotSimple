@@ -9,7 +9,7 @@ const settings = require("./settings.json");
 const bot = new Discord.Client();
 const youTube = new YouTube();
 
-youTube.setKey(settings.YOUTUBE_API_KEY);
+youTube.setKey(process.env.YOUTUBE_API_KEY || settings.YOUTUBE_API_KEY);
 
 // Initialize Discord Bot
 const clientId = process.env.IMGUR_CLIENT_ID || settings.IMGUR_CLIENT_ID;
@@ -99,7 +99,7 @@ fs.readdir("./events/", (err, files) => {
 bot.on("message", function (message) {
   if (
     message.author.bot || //filter out bot responses
-    !message.content.startsWith(settings.prefix) //filter out non-prefix messages
+    !message.content.startsWith(settings.prefix || process.env.prefix) //filter out non-prefix messages
     )
     return;
 
@@ -206,4 +206,4 @@ bot.on("message", function (message) {
 }); //end bot.onMessage
 
 
-bot.login(settings.token);
+bot.login(settings.token || process.env.token);
