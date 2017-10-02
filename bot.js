@@ -187,10 +187,10 @@ bot.on("message", function (message) {
                 return voiceChannel.leave();
               }
 
-              // if (voiceConnnection.speaking){
-              //   return message.channel.send("You must suffer until this song ends")
-              //     .then(msg => msg.delete(5000));
-              // }
+              if (voiceConnnection.speaking){
+                return message.channel.send("Cannot take requests while a song is playing")
+                  .then(msg => msg.delete(10000));
+              }
               youTube.search(param + " " + args.join(" "), 1, function(error, result) {
                 if (error) {
                   console.log(error);
@@ -199,7 +199,7 @@ bot.on("message", function (message) {
                   console.log(`Now playing ${result.items[0].snippet.title}`);
                   const link = result.items.map( item => item.id.videoId); //filterYoutubeVideoLinks(result);
                   const stream = ytdl(`https://www.youtube.com/watch?v=${link}`, { filter: "audioonly" });
-                  const dispatcher = voiceConnnection.playStream(stream);
+                  const dispatcher = voiceConnnection.playStream(stream, {"bitrate":"auto", "volume":0.25});
                   message.channel.send(`Now playing ${result.items[0].snippet.title}`)
                     .then(msg => msg.delete(5000));
                   dispatcher.on("end", () => voiceChannel.leave());
