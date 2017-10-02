@@ -74,10 +74,6 @@ function imgurSubredditPromise(subreddit){
   return rp(imgurSubredditPicOptions);
 }
 
-// bot.on("ready", () => {
-//   console.log("Bot is ready");
-// });
-
 fs.readdir("./events/", (err, files) => {
   if (err) return console.error(err);
   files.forEach(file => {
