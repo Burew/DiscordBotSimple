@@ -4,7 +4,16 @@ const YouTube = require("youtube-node");
 const ytdl = require("ytdl-core");
 const fs = require("fs");
 
-const settings = require("./settings.json");
+//load settings from file or env vars
+let settings = {};
+try {
+  settings = require("./settings.json");
+} catch(e){
+  let settingFields = ["YOUTUBE_API_KEY", "IMGUR_CLIENT_ID", "prefix", "token"];
+  settingFields.forEach(
+    field => {settings[field] = process.env[field]}
+  );
+}
 
 const bot = new Discord.Client();
 const youTube = new YouTube();
