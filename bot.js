@@ -2,6 +2,7 @@ const Discord = require("discord.js");
 const rp = require("request-promise");
 const YouTube = require("youtube-node");
 const ytdl = require("ytdl-core");
+const fs = require("fs");
 
 const settings = require("./settings.json");
 
@@ -12,8 +13,11 @@ youTube.setKey(settings.YOUTUBE_API_KEY);
 
 // Initialize Discord Bot
 const clientId = process.env.IMGUR_CLIENT_ID || settings.IMGUR_CLIENT_ID;
-let allowNSFW = false;
+allowNSFW = false;
 let cache = {};
+
+bot.allowNSFW = false;
+bot.cache = cache;
 
 //got this function from Mozilla Dev Net.
 function getRandomInt(min, max) {
@@ -33,7 +37,7 @@ function getRandImg(cacheObject, isNsfwChannel = false){
 	if (isNsfwChannel === true || currentLink.nsfw === false){
 		return currentLink.url;
 	} else {
-		if (allowNSFW && currentLink.nsfw === true)
+		if (bot.allowNSFW && currentLink.nsfw === true)
 			return currentLink.url;
 		else
 			return `This image is NSFW! Here is an unrendered link:\n${currentLink.url.substring(7, currentLink.url.length)}`;
@@ -61,13 +65,38 @@ function imgurSubredditPromise(subreddit){
   return rp(imgurSubredditPicOptions);
 }
 
-bot.on("ready", () => {
-  console.log("Bot is ready");
+// bot.on("ready", () => {
+//   console.log("Bot is ready");
+// });
+
+fs.readdir("./events/", (err, files) => {
+  if (err) return console.error(err);
+  files.forEach(file => {
+    let eventFunction = require(`./events/${file}`);
+    let eventName = file.split(".")[0]; //grab file name
+    // super-secret recipe to call events with all their proper arguments *after* the `client` var.
+    bot.on(eventName, (...args) => eventFunction.run(bot, ...args));
+  });
 });
 
-bot.on("message", function (message) {
-  console.log(`### Channel "${message.channel.name}" is considered a NSFW channel: ${message.channel.nsfw} ###`);
+// bot.on("message", message => {
+//   if (message.author.bot) return;
+//   if(message.content.indexOf(settings.prefix) !== 0) return;
+//
+//   // This is the best way to define args. Trust me.
+//   const args = message.content.slice(settings.prefix.length).trim().split(/ +/g);
+//   const command = args.shift().toLowerCase();
+//
+//   // The list of if/else is replaced with those simple 2 lines:
+//   try {
+//     let commandFile = require(`./commands/${command}.js`);
+//     commandFile.run(bot, message, args);
+//   } catch (err) {
+//     console.error(err);
+//   }
+// });
 
+bot.on("message", function (message) {
   if (
     message.author.bot || //filter out bot responses
     !message.content.startsWith(settings.prefix) //filter out non-prefix messages
@@ -84,23 +113,23 @@ bot.on("message", function (message) {
         break;
   			case "flush":
   				if (param){
-  					delete cache[param];
+  					delete bot.cache[param];
   				} else {
-  					cache = {};
+  					bot.cache = {};
   				}
           message.channel.send(`Cache Flushed, these links be fresh now`);
         break;
   			case "nsfw":
   				if (param){
   					if (param === "on"){
-  						allowNSFW = true;
+  						bot.allowNSFW = true;
   					} else if (param === "off"){
-  						allowNSFW = false;
+  						bot.allowNSFW = false;
   					} else if (param === "toggle"){
-  						allowNSFW = !allowNSFW;
+  						bot.allowNSFW = !bot.allowNSFW;
   					}
   				}
-          message.channel.send(`NSFW is currently set to ${(allowNSFW) ? "On, nsfw links will be shown" : "Off, nsfw links will be hidden"}.`);
+          message.channel.send(`NSFW is currently set to ${(bot.allowNSFW) ? "On, nsfw links will be shown" : "Off, nsfw links will be hidden"}.`);
         break;
         case "img":
   				let subreddit = param.toLowerCase();
@@ -110,8 +139,8 @@ bot.on("message", function (message) {
   				}
 
           //get from cache if available
-  				if (cache[subreddit] && cache[subreddit].links.length > 0){
-            message.channel.send(getRandImg(cache[subreddit], message.channel.nsfw));
+  				if (bot.cache[subreddit] && bot.cache[subreddit].links.length > 0){
+            message.channel.send(getRandImg(bot.cache[subreddit], message.channel.nsfw));
             return;
   				}
 
@@ -120,10 +149,10 @@ bot.on("message", function (message) {
       		    .then(function (JSONdata) {
       					let botMessage = "";
       					if (JSONdata.data.length !== 0){
-      						cache[subreddit] = makeCacheObject(JSONdata);
-      						if (cache[subreddit].links.length < 50)
-      							botMessage = `**Warning! Only ${cache[subreddit].links.length} image(s) associated with the __${subreddit}__ SubReddit imgur**\n`
-      						botMessage += getRandImg(cache[subreddit], message.channel.nsfw || message.channel.name.toLowerCase().includes("nsfw"));
+      						bot.cache[subreddit] = makeCacheObject(JSONdata);
+      						if (bot.cache[subreddit].links.length < 50)
+      							botMessage = `**Warning! Only ${bot.cache[subreddit].links.length} image(s) associated with the __${subreddit}__ SubReddit imgur**\n`
+      						botMessage += getRandImg(bot.cache[subreddit], message.channel.nsfw || message.channel.name.toLowerCase().includes("nsfw"));
       					} else {
       						botMessage = `Error: no images for subreddit "${subreddit}" found`;
       					}
@@ -149,18 +178,25 @@ bot.on("message", function (message) {
 
           voiceChannel.join()
             .then(voiceConnnection => {
-              if (voiceConnnection.speaking){
-                return message.channel.send("You must suffer until this song ends")
-                  .then(msg => msg.delete(5000));
+              if (param === "stop"){
+                return voiceChannel.leave();
               }
+
+              // if (voiceConnnection.speaking){
+              //   return message.channel.send("You must suffer until this song ends")
+              //     .then(msg => msg.delete(5000));
+              // }
               youTube.search(param + " " + args.join(" "), 1, function(error, result) {
                 if (error) {
                   console.log(error);
                 }
                 else {
+                  console.log(`Now playing ${result.items[0].snippet.title}`);
                   const link = result.items.map( item => item.id.videoId); //filterYoutubeVideoLinks(result);
                   const stream = ytdl(`https://www.youtube.com/watch?v=${link}`, { filter: "audioonly" });
                   const dispatcher = voiceConnnection.playStream(stream);
+                  message.channel.send(`Now playing ${result.items[0].snippet.title}`)
+                    .then(msg => msg.delete(5000));
                   dispatcher.on("end", () => voiceChannel.leave());
                 }
               }); //end youtube search and play
