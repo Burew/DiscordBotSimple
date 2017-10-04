@@ -179,7 +179,6 @@ bot.on("message", function (message) {
       		if (!voiceChannel){
       			return message.reply(`Please join a voice channel first!`); //mentions the user
       		}
-          console.log("youTube search: " + param + " " + args.join(" "));
 
           voiceChannel.join()
             .then(voiceConnnection => {
@@ -191,7 +190,11 @@ bot.on("message", function (message) {
                 return message.channel.send("Cannot take requests while a song is playing")
                   .then(msg => msg.delete(10000));
               }
-              youTube.search(param + " " + args.join(" "), 1, function(error, result) {
+
+              let searchTerm = param + " " + args.join(" ");
+              console.log(`Search term: ${searchTerm.replace( /[^A-Za-z0-9_ ]/g, "")}`);
+
+              youTube.search(searchTerm.replace( /\W*/, "") , 1, function(error, result) {
                 if (error) {
                   console.log(error);
                 }
@@ -199,9 +202,9 @@ bot.on("message", function (message) {
                   console.log(`Now playing ${result.items[0].snippet.title}`);
                   const link = result.items.map( item => item.id.videoId); //filterYoutubeVideoLinks(result);
                   const stream = ytdl(`https://www.youtube.com/watch?v=${link}`, { filter: "audioonly" });
-                  const dispatcher = voiceConnnection.playStream(stream, {"bitrate":"auto", "volume":0.25});
+                  const dispatcher = voiceConnnection.playStream(stream, {"bitrate":"auto", "volume":0.30});
                   message.channel.send(`Now playing ${result.items[0].snippet.title}`)
-                    .then(msg => msg.delete(5000));
+                    .then(msg => msg.delete(10000));
                   dispatcher.on("end", () => voiceChannel.leave());
                 }
               }); //end youtube search and play
