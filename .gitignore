@@ -1,7 +1,5 @@
 node_modules/
-
+node_modules_bak/
 settings.json
-
 Procfile
-
 .env
