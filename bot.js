@@ -194,7 +194,7 @@ bot.on("message", function (message) {
               let searchTerm = param + " " + args.join(" ");
               console.log(`Search term: ${searchTerm.replace( /[^A-Za-z0-9_ ]/g, "")}`);
 
-              youTube.search(searchTerm.replace( /\W*/, "") , 1, function(error, result) {
+              youTube.search(searchTerm.replace( /[^A-Za-z0-9_ ]/g, "") , 1, function(error, result) {
                 if (error) {
                   console.log(error);
                 }
