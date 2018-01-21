@@ -9,18 +9,18 @@
   },
   "engines": {
     "node": "8.1.x"
-  }
+  },
   "author": "Ken Huang",
   "license": "ISC",
   "dependencies": {
-    "discord.js": "^11.2.1",
+    "discord.js": "11.2.1",
     "express": "4.15.2",
-    "ffmpeg-binaries": "^3.2.2-3",
-    "node-opus": "^0.2.7",
+    "ffmpeg-binaries": "3.2.2-3",
+    "node-opus": "0.2.7",
     "opusscript": "0.0.3",
-    "request": "^2.82.0",
-    "request-promise": "^4.2.2",
-    "youtube-node": "^1.3.2",
-    "ytdl-core": "^0.17.1"
+    "request": "2.82.0",
+    "request-promise": "4.2.2",
+    "youtube-node": "1.3.2",
+    "ytdl-core": "0.17.1"
   }
 }
