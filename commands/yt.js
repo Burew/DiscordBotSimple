@@ -34,6 +34,7 @@ module.exports.run = (client, message, args) => {
           const link = result.items.map( item => item.id.videoId); //filterYoutubeVideoLinks(result);
           const stream = ytdl(`https://www.youtube.com/watch?v=${link}`, { filter: "audioonly" });
           const dispatcher = voiceConnnection.playStream(stream, {"bitrate":"auto", "volume":0.25});
+          dispatcher.on("error", (err) => {console.log(err)});
 
           console.log(`Now playing ${result.items[0].snippet.title}`);
           message.channel.send(`Now playing ${result.items[0].snippet.title}`)
@@ -41,5 +42,6 @@ module.exports.run = (client, message, args) => {
           dispatcher.on("end", () => voiceChannel.leave());
         }
       }); //end youtube search and play
-    });
+    })
+    .catch(console.error);
 };
