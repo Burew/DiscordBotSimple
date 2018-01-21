@@ -32,6 +32,8 @@ module.exports.run = (client, message, args) => {
             return message.channel.send(`No YouTube results found for search terms *${searchTerm}*`);
           }
           const link = result.items.map( item => item.id.videoId); //filterYoutubeVideoLinks(result);
+          console.log(link);
+          console.log(`https://www.youtube.com/watch?v=${link}`);
           const stream = ytdl(`https://www.youtube.com/watch?v=${link}`, { filter: "audioonly" });
           const dispatcher = voiceConnnection.playStream(stream, {"bitrate":"auto", "volume":0.25});
           dispatcher.on("error", (err) => {console.log(err)});
